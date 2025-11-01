@@ -1,0 +1,35 @@
+stages:
+  - build
+  - scan
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+
+build_backend:
+  stage: build
+  script:
+    - docker build -t student-backend ./backend
+
+build_frontend:
+  stage: build
+  script:
+    - docker build -t student-frontend ./frontend
+
+scan_backend:
+  stage: scan
+  image: aquasec/trivy
+  script:
+    - trivy image student-backend
+
+scan_frontend:
+  stage: scan
+  image: aquasec/trivy
+  script:
+    - trivy image student-frontend
+
+deploy:
+  stage: deploy
+  script:
+    - helm upgrade --install student-backend ./k8s/helm/student-backend
+    - helm upgrade --install student-frontend ./k8s/helm/student-frontend
