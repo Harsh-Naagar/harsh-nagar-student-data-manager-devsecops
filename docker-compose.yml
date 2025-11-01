@@ -2,6 +2,37 @@ version: '3.8'
 
 services:
 
+  mongo:
+    image: mongo:6.0
+    container_name: student-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: student-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/studentdb
+      - JWT_SECRET=your_jwt_secret
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: student-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+
   nginx:
     image: nginx:latest
     container_name: student-nginx
@@ -12,39 +43,6 @@ services:
     depends_on:
       - frontend
       - backend
-
-  backend:
-    build:
-      context: ./backend
-    container_name: student-backend
-    ports:
-      - "5000:5000"
-    volumes:
-      - ./backend:/app
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/studentdb
-      - JWT_SECRET=your_jwt_secret
-    depends_on:
-      - mongo
-
-  frontend:
-    build:
-      context: ./frontend
-    container_name: student-frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-    environment:
-      - REACT_APP_API_URL=http://localhost:5000
-
-  mongo:
-    image: mongo:6.0
-    container_name: student-mongo
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
 
 volumes:
   mongo-data:
